@@ -1,25 +1,28 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-
+import "./index.css";
+import config from "./utils/wagmiconfig";
+import { WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import WidgetContainer from "./components/WidgetContainer";
+import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
+import dynamicConfig from "./utils/dynamiconfig";
+import { SolanaWalletConnectors } from "@dynamic-labs/solana";
+const queryClient = new QueryClient();
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <WagmiProvider config={config}>
+      <DynamicContextProvider
+        settings={{
+          environmentId: "5d12d5a9-6206-433b-85b8-25fc9f0da5e3",
+          walletConnectors: [SolanaWalletConnectors],
+          initialAuthenticationMode: "connect-only",
+          enableVisitTrackingOnConnectOnly: true,
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <WidgetContainer />
+        </QueryClientProvider>
+      </DynamicContextProvider>
+    </WagmiProvider>
   );
 }
 

@@ -4,6 +4,8 @@ import controllers from "../../controllers";
 import config from "../../utils/wagmiconfig";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { signTypedData } from "@wagmi/core";
+import { ethers } from "ethers";
 export default function PayButton({
   handlePage,
 }: {
@@ -28,7 +30,9 @@ export default function PayButton({
     },
   });
   const { address, connector } = useAccount();
-  const { data, error, signTypedDataAsync } = useSignTypedData({ config });
+  const { data, error, signTypedDataAsync } = useSignTypedData({
+    config,
+  });
   console.log(data, init, "sign123");
   // @ts-ignore
   const result = useVerifyTypedData({
@@ -92,13 +96,22 @@ export default function PayButton({
         };
         console.log(payload, "signing payload");
         //@ts-ignore
-        let signData = await signTypedDataAsync(payload);
-        console.log(signData, "signdata");
-
-        if (signData && !error) {
+        // let signData = await signTypedData(config, payload);
+        // console.log(signData, "signdata");
+        const wagmiProvider = await connector.getProvider();
+        //@ts-ignore
+        const provider = new ethers.providers.Web3Provider(wagmiProvider);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const signature = await signer._signTypedData(
+          mutateInit.data.txnEvm.domain,
+          mutateInit.data.txnEvm.types,
+          mutateInit.data.txnEvm.values
+        );
+        if (signature) {
           let submitPayload = {
             checkoutId: mutateInit.data.checkoutId,
-            signedTxn: signData,
+            signedTxn: signature,
           };
 
           let mutateSubmit = await submit.mutateAsync(submitPayload);
